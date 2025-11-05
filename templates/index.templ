@@ -1,0 +1,483 @@
+package templates
+
+templ Index() {
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>Document Management System</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			html, body {
+				height: 100%;
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+				background-color: #1a1a1a;
+				color: #e0e0e0;
+			}
+
+			.container {
+				display: flex;
+				height: 100vh;
+			}
+
+			.sidebar {
+				width: 200px;
+				background-color: #121212;
+				color: #e0e0e0;
+				padding: 20px 0;
+				border-right: 1px solid #333;
+			}
+
+			.sidebar h2 {
+				padding: 10px 20px;
+				font-size: 12px;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+				color: #888;
+				margin-bottom: 10px;
+			}
+
+			.nav-item {
+				padding: 12px 20px;
+				cursor: pointer;
+				font-size: 14px;
+				color: #b0b0b0;
+				border-left: 3px solid transparent;
+				background-color: #121212;
+			}
+
+			.nav-item:hover {
+				background-color: #1f1f1f;
+				color: #e0e0e0;
+			}
+
+			.nav-item.active {
+				background-color: #1f1f1f;
+				border-left-color: #4a9eff;
+				color: #e0e0e0;
+			}
+
+			.main-content {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+			}
+
+			.header {
+				background-color: #1a1a1a;
+				padding: 20px 30px;
+				border-bottom: 1px solid #333;
+			}
+
+			.header h1 {
+				font-size: 20px;
+				font-weight: 600;
+				color: #e0e0e0;
+			}
+
+			.content {
+				flex: 1;
+				overflow-y: auto;
+				padding: 30px;
+			}
+
+			.page {
+				display: none;
+			}
+
+			.page.active {
+				display: block;
+			}
+
+			.section {
+				background-color: #262626;
+				padding: 25px;
+				border: 1px solid #333;
+			}
+
+			.section h2 {
+				font-size: 16px;
+				font-weight: 600;
+				margin-bottom: 20px;
+				color: #e0e0e0;
+				border-bottom: 1px solid #333;
+				padding-bottom: 10px;
+			}
+
+			.upload-zone {
+				border: 2px solid #333;
+				padding: 40px 20px;
+				text-align: center;
+				cursor: pointer;
+				background-color: #1f1f1f;
+			}
+
+			.upload-zone:hover {
+				border-color: #4a9eff;
+				background-color: #212121;
+			}
+
+			.upload-zone.dragover {
+				border-color: #4a9eff;
+				background-color: #1a2a35;
+			}
+
+			.upload-zone p {
+				color: #888;
+				font-size: 14px;
+				margin: 10px 0;
+			}
+
+			#fileInput {
+				display: none;
+			}
+
+			.button-group {
+				margin-top: 15px;
+			}
+
+			.button {
+				display: inline-block;
+				padding: 10px 20px;
+				margin-right: 10px;
+				border: none;
+				font-size: 13px;
+				font-weight: 500;
+				cursor: pointer;
+				text-decoration: none;
+				color: #e0e0e0;
+			}
+
+			.button-primary {
+				background-color: #4a9eff;
+				color: #000;
+			}
+
+			.button-primary:hover {
+				background-color: #3a8eef;
+			}
+
+			.button-danger {
+				background-color: #ff4444;
+				color: #fff;
+				padding: 6px 12px;
+				font-size: 12px;
+				margin-right: 5px;
+			}
+
+			.button-danger:hover {
+				background-color: #dd3333;
+			}
+
+			.button-secondary {
+				background-color: #444;
+				color: #e0e0e0;
+			}
+
+			.button-secondary:hover {
+				background-color: #555;
+			}
+
+			.file-table {
+				width: 100%;
+				border-collapse: collapse;
+				margin-top: 15px;
+			}
+
+			.file-table thead {
+				background-color: #1f1f1f;
+				border-bottom: 1px solid #333;
+			}
+
+			.file-table th {
+				padding: 12px;
+				text-align: left;
+				font-weight: 600;
+				font-size: 12px;
+				color: #b0b0b0;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+			}
+
+			.file-table td {
+				padding: 12px;
+				border-bottom: 1px solid #333;
+				font-size: 13px;
+				color: #c0c0c0;
+			}
+
+			.file-table tbody tr:hover {
+				background-color: #1f1f1f;
+			}
+
+			.file-name {
+				color: #e0e0e0;
+				font-weight: 500;
+				word-break: break-all;
+			}
+
+			.file-size {
+				color: #888;
+				text-align: right;
+			}
+
+			.file-date {
+				color: #888;
+				font-size: 12px;
+			}
+
+			.actions {
+				display: flex;
+				gap: 5px;
+			}
+
+			.message {
+				padding: 12px 16px;
+				margin-bottom: 15px;
+				font-size: 13px;
+				display: none;
+				border-left: 3px solid;
+			}
+
+			.message.show {
+				display: block;
+			}
+
+			.message-success {
+				background-color: #1a3a2a;
+				color: #4ade80;
+				border-left-color: #4ade80;
+			}
+
+			.message-error {
+				background-color: #3a1a1a;
+				color: #ff6b6b;
+				border-left-color: #ff6b6b;
+			}
+
+			.empty-state {
+				text-align: center;
+				padding: 50px 20px;
+				color: #666;
+			}
+
+			.empty-state-text {
+				font-size: 14px;
+				margin-top: 10px;
+				color: #555;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="sidebar">
+				<h2>Navigation</h2>
+				<div class="nav-item active" onclick="showPage('upload')">Upload</div>
+				<div class="nav-item" onclick="showPage('documents')">Documents</div>
+				<div class="nav-item" onclick="logout()">Logout</div>
+			</div>
+
+			<div class="main-content">
+				<div class="header">
+					<h1>Document Management System</h1>
+				</div>
+
+				<div class="content">
+					<div id="message" class="message"></div>
+
+					<!-- Upload Page -->
+					<div id="upload" class="page active">
+						<div class="section">
+							<h2>Upload Document</h2>
+							<div class="upload-zone" id="uploadZone">
+								<p>Drag and drop files here or click to browse</p>
+								<p style="font-size: 12px; margin-top: 8px; color: #666;">Maximum: 500 MB</p>
+								<input type="file" id="fileInput"/>
+							</div>
+							<div class="button-group">
+								<button class="button button-primary" onclick="uploadFile()">Upload</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- Documents Page -->
+					<div id="documents" class="page">
+						<div class="section">
+							<h2>Documents</h2>
+							<button class="button button-secondary" onclick="refreshAndShowDocuments()">Refresh</button>
+
+							<table class="file-table" id="fileTable" style="display: none;">
+								<thead>
+									<tr>
+										<th style="width: 45%;">File Name</th>
+										<th style="width: 15%;">Size</th>
+										<th style="width: 25%;">Uploaded</th>
+										<th style="width: 15%;">Actions</th>
+									</tr>
+								</thead>
+								<tbody id="fileList"></tbody>
+							</table>
+
+							<div class="empty-state" id="emptyState">
+								<div>No documents uploaded</div>
+								<div class="empty-state-text">Use the Upload page to add documents</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			const uploadZone = document.getElementById('uploadZone');
+			const fileInput = document.getElementById('fileInput');
+			const messageDiv = document.getElementById('message');
+
+			uploadZone.addEventListener('click', () => fileInput.click());
+
+			uploadZone.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				uploadZone.classList.add('dragover');
+			});
+
+			uploadZone.addEventListener('dragleave', () => {
+				uploadZone.classList.remove('dragover');
+			});
+
+			uploadZone.addEventListener('drop', (e) => {
+				e.preventDefault();
+				uploadZone.classList.remove('dragover');
+				fileInput.files = e.dataTransfer.files;
+			});
+
+			function showPage(pageName) {
+				const pages = document.querySelectorAll('.page');
+				const navItems = document.querySelectorAll('.nav-item');
+
+				pages.forEach(page => page.classList.remove('active'));
+				navItems.forEach(item => item.classList.remove('active'));
+
+				document.getElementById(pageName).classList.add('active');
+				event.target.classList.add('active');
+
+				if (pageName === 'documents') {
+					refreshFiles();
+				}
+			}
+
+			function refreshAndShowDocuments() {
+				showPage('documents');
+			}
+
+			function showMessage(message, type) {
+				messageDiv.className = 'message show message-' + type;
+				messageDiv.textContent = message;
+				setTimeout(() => {
+					messageDiv.classList.remove('show');
+				}, 4000);
+			}
+
+			async function uploadFile() {
+				const file = fileInput.files[0];
+				if (!file) {
+					showMessage('Please select a file', 'error');
+					return;
+				}
+
+				const formData = new FormData();
+				formData.append('file', file);
+
+				try {
+					const response = await fetch('/api/upload', {
+						method: 'POST',
+						body: formData
+					});
+					const data = await response.json();
+					if (data.success) {
+						showMessage('Document uploaded successfully', 'success');
+						fileInput.value = '';
+					} else {
+						showMessage('Upload failed: ' + data.error, 'error');
+					}
+				} catch (error) {
+					showMessage('Error: ' + error.message, 'error');
+				}
+			}
+
+			async function refreshFiles() {
+				try {
+					const response = await fetch('/api/files');
+					const data = await response.json();
+
+					if (data.success && data.data.files && data.data.files.length > 0) {
+						const fileList = document.getElementById('fileList');
+						fileList.innerHTML = data.data.files.map(file =>
+							'<tr>' +
+							'<td class="file-name">' + escapeHtml(file.key) + '</td>' +
+							'<td class="file-size">' + formatBytes(file.size) + '</td>' +
+							'<td class="file-date">' + file.last_modified + '</td>' +
+							'<td class="actions">' +
+							'<a href="/api/download?key=' + encodeURIComponent(file.key) + '" class="button button-secondary" style="padding: 6px 12px; font-size: 12px;">Download</a>' +
+							'<button class="button button-danger" onclick="deleteFile(\'' + escapeQuotes(file.key) + '\')">Delete</button>' +
+							'</td>' +
+							'</tr>'
+						).join('');
+						document.getElementById('fileTable').style.display = 'table';
+						document.getElementById('emptyState').style.display = 'none';
+					} else {
+						document.getElementById('fileTable').style.display = 'none';
+						document.getElementById('emptyState').style.display = 'block';
+					}
+				} catch (error) {
+					showMessage('Error loading documents: ' + error.message, 'error');
+				}
+			}
+
+			function escapeHtml(text) {
+				const div = document.createElement('div');
+				div.textContent = text;
+				return div.innerHTML;
+			}
+
+			function escapeQuotes(text) {
+				return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+			}
+
+			function deleteFile(key) {
+				if (confirm('Delete this document?')) {
+					fetch('/api/files?key=' + encodeURIComponent(key), {
+						method: 'DELETE'
+					}).then(response => response.json())
+					.then(data => {
+						if (data.success) {
+							showMessage('Document deleted', 'success');
+							refreshFiles();
+						} else {
+							showMessage('Delete failed: ' + data.error, 'error');
+						}
+					});
+				}
+			}
+
+			function formatBytes(bytes) {
+				if (bytes === 0) return '0 B';
+				const k = 1024;
+				const sizes = ['B', 'KB', 'MB', 'GB'];
+				const i = Math.floor(Math.log(bytes) / Math.log(k));
+				return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+			}
+
+			function logout() {
+				alert('Logout functionality would be implemented here');
+			}
+		</script>
+	</body>
+	</html>
+}

@@ -1,0 +1,16 @@
+.git
+.gitignore
+.github
+.dockerignore
+.idea
+*.iml
+.DS_Store
+README.md
+docker-compose.yml
+.env
+.env.local
+*.log
+tmp/
+dist/
+node_modules/
+vendor/

@@ -3,10 +3,15 @@ module s3-test-app
 go 1.25.0
 
 require (
+	github.com/a-h/templ v0.3.960
 	github.com/aws/aws-sdk-go-v2 v1.39.5
 	github.com/aws/aws-sdk-go-v2/config v1.31.16
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.20
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.89.1
+	github.com/go-chi/chi/v5 v5.2.3
+	github.com/go-chi/cors v1.2.2
+	github.com/mattn/go-sqlite3 v1.14.32
+	go.uber.org/zap v1.27.0
 )
 
 require (
@@ -24,4 +29,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.39.0 // indirect
 	github.com/aws/smithy-go v1.23.2 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 )

@@ -1,7 +1,7 @@
 # Build stage
 FROM golang:1.25-alpine AS builder
 
-WORKDIR /app
+WORKDIR /build
 
 # Copy go mod files
 COPY go.mod go.sum ./
@@ -10,28 +10,28 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy source code
-COPY main.go .
+COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o s3-test-app .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o s3-test-app ./cmd/server
 
 # Final stage
 FROM alpine:latest
 
 WORKDIR /app
 
-# Install ca-certificates for HTTPS
-RUN apk --no-cache add ca-certificates
+# Install ca-certificates for HTTPS and curl for health check
+RUN apk --no-cache add ca-certificates curl
 
 # Copy the binary from builder
-COPY --from=builder /app/s3-test-app .
+COPY --from=builder /build/s3-test-app .
 
 # Expose port
 EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:8080/health || exit 1
+  CMD curl -f http://localhost:8080/health || exit 1
 
 # Run the application
-ENTRYPOINT ["./s3-test-app"]
+CMD ["./s3-test-app"]
