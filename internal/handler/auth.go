@@ -247,8 +247,21 @@ func (h *AuthHandler) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate user ID
 	userID := "user_" + time.Now().Format("20060102150405")
 
+	// Check if this is the first user (make them admin)
+	userCount, err := h.database.GetUserCount()
+	if err != nil {
+		h.logger.Error("failed to check user count", zap.Error(err))
+		userCount = 0 // Default to not admin if check fails
+	}
+
+	// Set role: first user is admin, others are uploader
+	role := auth.RoleUploader
+	if userCount == 0 {
+		role = auth.RoleAdmin
+	}
+
 	// Create user
-	if err := h.database.CreateUser(userID, req.Username, req.Email, req.Password, auth.RoleUploader); err != nil {
+	if err := h.database.CreateUser(userID, req.Username, req.Email, req.Password, role); err != nil {
 		h.logger.Error("failed to create user", zap.String("username", req.Username), zap.Error(err))
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)

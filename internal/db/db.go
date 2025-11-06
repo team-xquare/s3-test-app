@@ -167,6 +167,20 @@ func (d *Database) GetAllUsers() ([]*User, error) {
 	return users, nil
 }
 
+// GetUserCount returns the total number of users
+func (d *Database) GetUserCount() (int, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	var count int
+	err := d.conn.QueryRow(`SELECT COUNT(*) FROM users`).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get user count: %w", err)
+	}
+
+	return count, nil
+}
+
 // CreateUser creates a new user
 func (d *Database) CreateUser(id, username, email, password string, role auth.Role) error {
 	d.mu.Lock()
