@@ -41,11 +41,6 @@ func main() {
 	}
 	defer database.Close()
 
-	// Initialize demo users
-	if err := initializeDemoUsers(database, logger); err != nil {
-		logger.Fatal("Failed to initialize demo users", zap.Error(err))
-	}
-
 	// Initialize S3 service
 	s3Svc, err := service.NewS3Service(&cfg.S3, logger)
 	if err != nil {
@@ -57,7 +52,7 @@ func main() {
 
 	// Create handlers
 	h := handler.NewHandler(s3Svc, logger)
-	authHandler := handler.NewAuthHandler(tokenManager, database, logger)
+	authHandler := handler.NewAuthHandler(tokenManager, database, logger, cfg)
 	adminHandler := handler.NewAdminHandler(database, logger)
 
 	// Create router
@@ -80,11 +75,13 @@ func main() {
 	// Public Routes
 	r.Get("/", h.GetIndex)
 	r.Get("/login", handler.GetLogin)
+	r.Get("/signup", handler.GetSignup)
 	r.Get("/health", h.HealthCheck)
 
 	// Auth Routes (public)
 	r.Route("/api/auth", func(r chi.Router) {
 		r.Post("/login", authHandler.LoginHandler)
+		r.Post("/signup", authHandler.SignupHandler)
 	})
 
 	// Protected Routes (require authentication)
@@ -132,58 +129,4 @@ func main() {
 	if err := server.Close(); err != nil {
 		logger.Error("Server shutdown error", zap.Error(err))
 	}
-}
-
-// initializeDemoUsers creates demo users if they don't exist
-func initializeDemoUsers(database *db.Database, logger *zap.Logger) error {
-	demoUsers := []struct {
-		id       string
-		username string
-		email    string
-		password string
-		role     auth.Role
-	}{
-		{
-			id:       "admin",
-			username: "admin",
-			email:    "admin@example.com",
-			password: "admin123",
-			role:     auth.RoleAdmin,
-		},
-		{
-			id:       "uploader",
-			username: "uploader",
-			email:    "uploader@example.com",
-			password: "uploader123",
-			role:     auth.RoleUploader,
-		},
-		{
-			id:       "viewer",
-			username: "viewer",
-			email:    "viewer@example.com",
-			password: "viewer123",
-			role:     auth.RoleViewer,
-		},
-	}
-
-	for _, user := range demoUsers {
-		// Check if user already exists
-		_, err := database.GetUserByID(user.id)
-		if err == nil {
-			// User already exists, skip
-			logger.Info("Demo user already exists", zap.String("username", user.username))
-			continue
-		}
-
-		// Create user
-		if err := database.CreateUser(user.id, user.username, user.email, user.password, user.role); err != nil {
-			logger.Warn("Failed to create demo user", zap.String("username", user.username), zap.Error(err))
-			// Don't fail on duplicate users, continue
-			continue
-		}
-
-		logger.Info("Created demo user", zap.String("username", user.username), zap.String("role", string(user.role)))
-	}
-
-	return nil
 }

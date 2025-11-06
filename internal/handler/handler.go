@@ -48,6 +48,12 @@ func GetLogin(w http.ResponseWriter, r *http.Request) {
 	templates.Login().Render(r.Context(), w)
 }
 
+// GetSignup handles the signup page
+func GetSignup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templates.Signup().Render(r.Context(), w)
+}
+
 // GetDashboard handles the dashboard page
 func GetDashboard(w http.ResponseWriter, r *http.Request) {
 	user := auth.GetUserFromContext(r.Context())
@@ -104,6 +110,30 @@ func (h *Handler) UploadFile(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Response{
 			Success: false,
 			Error:   "method not allowed",
+		})
+		return
+	}
+
+	// Check upload permission
+	user := auth.GetUserFromContext(r.Context())
+	if user == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(Response{
+			Success: false,
+			Error:   "unauthorized",
+		})
+		return
+	}
+
+	perm := auth.PermissionMap[user.Role]
+	if !perm.CanUpload {
+		h.logger.Warn("upload attempt by user without permission", zap.String("user", user.Name), zap.String("role", string(user.Role)))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(Response{
+			Success: false,
+			Error:   "insufficient permissions to upload files",
 		})
 		return
 	}
@@ -202,6 +232,30 @@ func (h *Handler) DeleteFile(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Response{
 			Success: false,
 			Error:   "method not allowed",
+		})
+		return
+	}
+
+	// Check delete permission
+	user := auth.GetUserFromContext(r.Context())
+	if user == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(Response{
+			Success: false,
+			Error:   "unauthorized",
+		})
+		return
+	}
+
+	perm := auth.PermissionMap[user.Role]
+	if !perm.CanDelete {
+		h.logger.Warn("delete attempt by user without permission", zap.String("user", user.Name), zap.String("role", string(user.Role)))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(Response{
+			Success: false,
+			Error:   "insufficient permissions to delete files",
 		})
 		return
 	}

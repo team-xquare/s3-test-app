@@ -438,9 +438,22 @@ templ Dashboard(username string, role string) {
 		</div>
 
 		<script>
+			// Role-based permissions
+			const userRole = '{ role }';
+			const canUpload = ['admin', 'uploader'].includes(userRole);
+			const canDelete = ['admin'].includes(userRole);
+			const canManage = ['admin'].includes(userRole);
+
 			const uploadZone = document.getElementById('uploadZone');
 			const fileInput = document.getElementById('fileInput');
 			const messageDiv = document.getElementById('message');
+
+			// Hide upload zone if user doesn't have permission
+			if (!canUpload && uploadZone) {
+				uploadZone.style.display = 'none';
+				const uploadBtn = document.querySelector('#upload .button-primary');
+				if (uploadBtn) uploadBtn.style.display = 'none';
+			}
 
 			uploadZone.addEventListener('click', () => fileInput.click());
 
@@ -526,17 +539,18 @@ templ Dashboard(username string, role string) {
 
 					if (data.success && data.data.files && data.data.files.length > 0) {
 						const fileList = document.getElementById('fileList');
-						fileList.innerHTML = data.data.files.map(file =>
-							'<tr>' +
-							'<td class="file-name">' + escapeHtml(file.key) + '</td>' +
-							'<td style="color: #888;">' + formatBytes(file.size) + '</td>' +
-							'<td style="color: #888; font-size: 12px;">' + file.last_modified + '</td>' +
-							'<td class="actions">' +
-							'<a href="/api/download?key=' + encodeURIComponent(file.key) + '" class="button button-secondary" style="padding: 6px 12px; font-size: 12px;">Download</a>' +
-							'<button class="button button-danger" onclick="deleteFile(\'' + escapeQuotes(file.key) + '\')">Delete</button>' +
-							'</td>' +
-							'</tr>'
-						).join('');
+						fileList.innerHTML = data.data.files.map(file => {
+							let actions = '<a href="/api/download?key=' + encodeURIComponent(file.key) + '" class="button button-secondary" style="padding: 6px 12px; font-size: 12px;">Download</a>';
+							if (canDelete) {
+								actions += '<button class="button button-danger" onclick="deleteFile(\'' + escapeQuotes(file.key) + '\')">Delete</button>';
+							}
+							return '<tr>' +
+								'<td class="file-name">' + escapeHtml(file.key) + '</td>' +
+								'<td style="color: #888;">' + formatBytes(file.size) + '</td>' +
+								'<td style="color: #888; font-size: 12px;">' + file.last_modified + '</td>' +
+								'<td class="actions">' + actions + '</td>' +
+								'</tr>';
+						}).join('');
 						document.getElementById('fileTable').style.display = 'table';
 						document.getElementById('emptyState').style.display = 'none';
 					} else {

@@ -41,7 +41,8 @@ type DatabaseConfig struct {
 
 // AuthConfig holds authentication configuration
 type AuthConfig struct {
-	Secret string
+	Secret      string
+	SignupKey   string
 }
 
 // NewConfig creates a new configuration from environment variables
@@ -52,9 +53,9 @@ func NewConfig() *Config {
 			Host: getEnv("HOST", "0.0.0.0"),
 		},
 		S3: S3Config{
-			Endpoint:  getEnv("S3_ENDPOINT", "http://xquare-test:8333"),
-			Region:    getEnv("S3_REGION", "us-east-1"),
-			Bucket:    getEnv("S3_BUCKET", "test-buckets"),
+			Endpoint:  getEnv("S3_ENDPOINT", ""),
+			Region:    getEnv("S3_REGION", ""),
+			Bucket:    getEnv("S3_BUCKET", ""),
 			AccessKey: getEnv("S3_ACCESS_KEY", ""),
 			SecretKey: getEnv("S3_SECRET_KEY", ""),
 		},
@@ -65,18 +66,34 @@ func NewConfig() *Config {
 			Path: getEnv("DB_PATH", "./data/app.db"),
 		},
 		Auth: AuthConfig{
-			Secret: getEnv("AUTH_SECRET", "change-this-secret-in-production"),
+			Secret:    getEnv("AUTH_SECRET", ""),
+			SignupKey: getEnv("SIGNUP_KEY", ""),
 		},
 	}
 }
 
 // Validate validates the configuration
 func (c *Config) Validate() error {
+	if c.S3.Endpoint == "" {
+		return fmt.Errorf("S3_ENDPOINT is required")
+	}
+	if c.S3.Region == "" {
+		return fmt.Errorf("S3_REGION is required")
+	}
+	if c.S3.Bucket == "" {
+		return fmt.Errorf("S3_BUCKET is required")
+	}
 	if c.S3.AccessKey == "" {
 		return fmt.Errorf("S3_ACCESS_KEY is required")
 	}
 	if c.S3.SecretKey == "" {
 		return fmt.Errorf("S3_SECRET_KEY is required")
+	}
+	if c.Auth.Secret == "" {
+		return fmt.Errorf("AUTH_SECRET is required")
+	}
+	if c.Auth.SignupKey == "" {
+		return fmt.Errorf("SIGNUP_KEY is required")
 	}
 	return nil
 }

@@ -14,16 +14,7 @@ func AuthMiddleware(tokenManager *auth.TokenManager) func(http.Handler) http.Han
 			// Get token from header
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				// For now, create a default user for testing
-				// In production, this would reject the request
-				user := &auth.User{
-					ID:    "test-user",
-					Name:  "Test User",
-					Email: "test@example.com",
-					Role:  auth.RoleUploader,
-				}
-				*r = *r.WithContext(auth.SetUserInContext(r.Context(), user))
-				next.ServeHTTP(w, r)
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 

@@ -6,16 +6,38 @@ GOFLAGS=-v
 TEMPL=$(HOME)/go/bin/templ
 
 help:
-	@echo "Available commands:"
-	@echo "  make templ-gen     - Generate Templ components"
-	@echo "  make build         - Build the application"
-	@echo "  make run           - Run the application (requires S3_ACCESS_KEY and S3_SECRET_KEY env vars)"
+	@echo "Document Management System - Make Commands"
+	@echo ""
+	@echo "Development:"
+	@echo "  make templ-gen     - Generate Templ components from .templ files"
+	@echo "  make build         - Build the application binary"
+	@echo "  make run           - Build and run the application"
 	@echo "  make test          - Run tests"
 	@echo "  make clean         - Clean build artifacts"
-	@echo "  make lint          - Run linter"
-	@echo "  make fmt           - Format code"
+	@echo "  make deps          - Download and tidy dependencies"
+	@echo ""
+	@echo "Code Quality:"
+	@echo "  make lint          - Run linter (golangci-lint)"
+	@echo "  make fmt           - Format code (go fmt)"
+	@echo ""
+	@echo "Docker:"
 	@echo "  make docker-build  - Build Docker image"
-	@echo "  make docker-run    - Run Docker container"
+	@echo "  make docker-run    - Build and run Docker container"
+	@echo ""
+	@echo "Docker Compose (recommended for development):"
+	@echo "  docker-compose up   - Start MinIO and application"
+	@echo "  docker-compose down - Stop all services"
+	@echo ""
+	@echo "Environment Variables Required:"
+	@echo "  S3_ENDPOINT        - S3/MinIO endpoint (e.g., http://localhost:9000)"
+	@echo "  S3_REGION          - AWS region (e.g., us-east-1)"
+	@echo "  S3_BUCKET          - S3 bucket name (e.g., documents)"
+	@echo "  S3_ACCESS_KEY      - S3 access key"
+	@echo "  S3_SECRET_KEY      - S3 secret key"
+	@echo "  AUTH_SECRET        - JWT signing secret"
+	@echo "  SIGNUP_KEY         - Key required for user registration"
+	@echo ""
+	@echo "See README.md for detailed setup instructions"
 
 templ-gen:
 	@echo "Generating Templ components..."
@@ -52,9 +74,19 @@ docker-build:
 
 docker-run: docker-build
 	@echo "Running Docker container..."
+	@echo "Note: Set required environment variables:"
+	@echo "  S3_ENDPOINT, S3_REGION, S3_BUCKET"
+	@echo "  S3_ACCESS_KEY, S3_SECRET_KEY"
+	@echo "  AUTH_SECRET, SIGNUP_KEY"
 	docker run -p 8080:8080 \
-		-e S3_ACCESS_KEY=minioadmin \
-		-e S3_SECRET_KEY=minioadmin \
+		-v $(PWD)/data:/app/data \
+		-e S3_ENDPOINT=${S3_ENDPOINT:-http://localhost:9000} \
+		-e S3_REGION=${S3_REGION:-us-east-1} \
+		-e S3_BUCKET=${S3_BUCKET:-documents} \
+		-e S3_ACCESS_KEY=${S3_ACCESS_KEY} \
+		-e S3_SECRET_KEY=${S3_SECRET_KEY} \
+		-e AUTH_SECRET=${AUTH_SECRET:-your-secret-key} \
+		-e SIGNUP_KEY=${SIGNUP_KEY:-your-signup-key} \
 		$(BINARY_NAME):latest
 
 deps:

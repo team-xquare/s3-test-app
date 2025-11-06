@@ -117,6 +117,27 @@ func (d *Database) GetUserByID(id string) (*User, error) {
 	return &user, nil
 }
 
+// GetUserByEmail retrieves a user by email
+func (d *Database) GetUserByEmail(email string) (*User, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	var user User
+	err := d.conn.QueryRow(
+		`SELECT id, username, email, password, role FROM users WHERE email = ?`,
+		email,
+	).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Role)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	return &user, nil
+}
+
 // GetAllUsers retrieves all users
 func (d *Database) GetAllUsers() ([]*User, error) {
 	d.mu.RLock()
