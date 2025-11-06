@@ -11,26 +11,33 @@ import (
 func AuthMiddleware(tokenManager *auth.TokenManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Get token from header
-			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
+			var tokenString string
 
-			// Extract token from "Bearer <token>" format
-			parts := strings.Split(authHeader, " ")
-			if len(parts) != 2 || parts[0] != "Bearer" {
-				http.Error(w, "Invalid authorization header", http.StatusUnauthorized)
-				return
-			}
+			// First, try to get token from cookie (for HTML page requests)
+			if cookie, err := r.Cookie("auth_token"); err == nil {
+				tokenString = cookie.Value
+			} else {
+				// Fall back to Authorization header (for API requests from JS)
+				authHeader := r.Header.Get("Authorization")
+				if authHeader == "" {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
 
-			tokenString := parts[1]
+				// Extract token from "Bearer <token>" format
+				parts := strings.Split(authHeader, " ")
+				if len(parts) != 2 || parts[0] != "Bearer" {
+					http.Error(w, "Invalid authorization header", http.StatusUnauthorized)
+					return
+				}
+
+				tokenString = parts[1]
+			}
 
 			// Validate token
 			claims, err := tokenManager.ValidateToken(tokenString)
 			if err != nil {
-				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 

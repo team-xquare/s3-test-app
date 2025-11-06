@@ -473,8 +473,9 @@ templ Dashboard(username string, role string) {
 			});
 
 			function getAuthHeader() {
-				const token = localStorage.getItem('token');
-				return token ? { 'Authorization': 'Bearer ' + token } : {};
+				// Token is now in HTTP-only cookie, no need to manually add header
+				// The cookie will be automatically sent with requests
+				return {};
 			}
 
 			function showPage(pageName) {
@@ -515,6 +516,7 @@ templ Dashboard(username string, role string) {
 				try {
 					const response = await fetch('/api/upload', {
 						method: 'POST',
+						credentials: 'include',
 						headers: getAuthHeader(),
 						body: formData
 					});
@@ -533,6 +535,7 @@ templ Dashboard(username string, role string) {
 			async function refreshFiles() {
 				try {
 					const response = await fetch('/api/files', {
+						credentials: 'include',
 						headers: getAuthHeader()
 					});
 					const data = await response.json();
@@ -565,6 +568,7 @@ templ Dashboard(username string, role string) {
 			async function loadUsers() {
 				try {
 					const response = await fetch('/api/admin/users', {
+						credentials: 'include',
 						headers: getAuthHeader()
 					});
 					const data = await response.json();
@@ -600,6 +604,7 @@ templ Dashboard(username string, role string) {
 				if (confirm('Delete this document?')) {
 					fetch('/api/files?key=' + encodeURIComponent(key), {
 						method: 'DELETE',
+						credentials: 'include',
 						headers: getAuthHeader()
 					}).then(response => response.json())
 					.then(data => {
@@ -617,6 +622,7 @@ templ Dashboard(username string, role string) {
 				if (confirm('Delete this user?')) {
 					fetch('/api/admin/users/' + userId, {
 						method: 'DELETE',
+						credentials: 'include',
 						headers: getAuthHeader()
 					}).then(response => response.json())
 					.then(data => {
@@ -649,8 +655,16 @@ templ Dashboard(username string, role string) {
 			}
 
 			function logout() {
-				localStorage.removeItem('token');
-				window.location.href = '/login';
+				// Call logout endpoint to clear cookie
+				fetch('/api/auth/logout', {
+					method: 'POST',
+					credentials: 'include'
+				}).then(() => {
+					window.location.href = '/login';
+				}).catch(() => {
+					// Even if request fails, redirect to login
+					window.location.href = '/login';
+				});
 			}
 
 			window.onload = refreshFiles;

@@ -127,10 +127,36 @@ func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.logger.Info("user logged in", zap.String("username", req.Username), zap.String("role", string(user.Role)))
 
+	// Set auth token cookie
+	auth.SetTokenCookie(w, token, 24*time.Hour)
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(LoginResponse{
 		Success: true,
 		Token:   token,
+	})
+}
+
+// LogoutHandler handles user logout
+func (h *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "method not allowed",
+		})
+		return
+	}
+
+	// Clear auth token cookie
+	auth.ClearTokenCookie(w)
+
+	h.logger.Info("user logged out")
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
 	})
 }
 
@@ -255,6 +281,9 @@ func (h *AuthHandler) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.Info("user registered", zap.String("username", req.Username), zap.String("email", req.Email))
+
+	// Set auth token cookie
+	auth.SetTokenCookie(w, token, 24*time.Hour)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(SignupResponse{

@@ -189,6 +189,7 @@ templ Signup() {
 				try {
 					const response = await fetch('/api/auth/signup', {
 						method: 'POST',
+						credentials: 'include',
 						headers: {
 							'Content-Type': 'application/json'
 						},
@@ -203,7 +204,6 @@ templ Signup() {
 					const data = await response.json();
 
 					if (data.success) {
-						localStorage.setItem('token', data.token);
 						window.location.href = '/dashboard';
 					} else {
 						showMessage(data.error || 'Signup failed', 'error');

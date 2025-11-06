@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -107,4 +108,32 @@ func (c *Claims) ToUser() *User {
 		Email: c.Email,
 		Role:  c.Role,
 	}
+}
+
+// SetTokenCookie creates an HTTP-only cookie with the token
+func SetTokenCookie(w http.ResponseWriter, token string, expirationTime time.Duration) {
+	cookie := &http.Cookie{
+		Name:     "auth_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   int(expirationTime.Seconds()),
+	}
+	http.SetCookie(w, cookie)
+}
+
+// ClearTokenCookie removes the auth token cookie
+func ClearTokenCookie(w http.ResponseWriter) {
+	cookie := &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	}
+	http.SetCookie(w, cookie)
 }

@@ -82,6 +82,7 @@ func main() {
 	r.Route("/api/auth", func(r chi.Router) {
 		r.Post("/login", authHandler.LoginHandler)
 		r.Post("/signup", authHandler.SignupHandler)
+		r.Post("/logout", authHandler.LogoutHandler)
 	})
 
 	// Protected Routes (require authentication)

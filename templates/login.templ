@@ -168,6 +168,7 @@ templ Login() {
 				try {
 					const response = await fetch('/api/auth/login', {
 						method: 'POST',
+						credentials: 'include',
 						headers: {
 							'Content-Type': 'application/json'
 						},
@@ -180,7 +181,6 @@ templ Login() {
 					const data = await response.json();
 
 					if (data.success) {
-						localStorage.setItem('token', data.token);
 						window.location.href = '/dashboard';
 					} else {
 						showMessage(data.error || 'Login failed', 'error');
