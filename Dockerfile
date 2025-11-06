@@ -1,43 +1,78 @@
-# Build stage
-FROM golang:1.25-alpine AS builder
+# Syntax: docker/dockerfile:1
+# Multi-stage build for minimal image size
+
+# ============================================
+# Stage 1: Dependencies Cache
+# ============================================
+FROM golang:1.25-alpine AS deps-builder
+
+RUN apk add --no-cache gcc musl-dev sqlite-dev
 
 WORKDIR /build
 
-# Install build dependencies for CGO (required for sqlite3)
-RUN apk add --no-cache gcc musl-dev sqlite-dev
-
-# Copy go mod files
 COPY go.mod go.sum ./
 
-# Download dependencies
 RUN go mod download
 
-# Copy source code
+# ============================================
+# Stage 2: Builder
+# ============================================
+FROM golang:1.25-alpine AS builder
+
+RUN apk add --no-cache gcc musl-dev sqlite-dev
+
+WORKDIR /build
+
+# Copy cached dependencies from stage 1
+COPY --from=deps-builder /go/pkg /go/pkg
+
+COPY go.mod go.sum ./
+
 COPY . .
 
-# Build the application with CGO enabled for sqlite3
-RUN CGO_ENABLED=1 GOOS=linux go build -a -o s3-test-app ./cmd/server
+# Build with optimizations:
+# -ldflags: Strip debug symbols and remove DWARF info (~40% size reduction)
+# -s: Disable symbol table
+# -w: Disable DWARF debugging information
+# -trimpath: Strip build path from binary
+RUN CGO_ENABLED=1 GOOS=linux CGO_CFLAGS="-O3" LDFLAGS="-s -w -X main.Version=1.0" \
+    go build -a -trimpath \
+    -ldflags="-s -w" \
+    -o s3-test-app ./cmd/server && \
+    chmod +x s3-test-app && \
+    ls -lh s3-test-app
 
-# Final stage
-FROM alpine:latest
+# ============================================
+# Stage 3: Runtime (Minimal Image)
+# ============================================
+FROM alpine:3.20
+
+# Install only essential runtime dependencies
+RUN apk add --no-cache --virtual .runtime ca-certificates sqlite-libs libc6-compat && \
+    addgroup -g 1000 app && \
+    adduser -D -u 1000 -G app app && \
+    mkdir -p /app/data && \
+    chown -R app:app /app
 
 WORKDIR /app
 
-# Install ca-certificates for HTTPS, curl for health check, and sqlite libraries
-RUN apk --no-cache add ca-certificates curl sqlite-libs
+# Copy binary from builder
+COPY --from=builder --chown=app:app /build/s3-test-app ./
 
-# Copy the binary from builder
-COPY --from=builder /build/s3-test-app .
+# Copy health check script (minimal)
+RUN echo '#!/bin/sh' > /healthcheck.sh && \
+    echo 'curl -f http://localhost:8080/health || exit 1' >> /healthcheck.sh && \
+    chmod +x /healthcheck.sh
 
-# Create data directory for SQLite database
-RUN mkdir -p /app/data
+# Non-root user
+USER app
 
 # Expose port
 EXPOSE 8080
 
-# Health check
+# Health check (use lightweight check)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
+  CMD /healthcheck.sh
 
 # Run the application
-CMD ["./s3-test-app"]
+ENTRYPOINT ["./s3-test-app"]

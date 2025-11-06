@@ -1,16 +1,55 @@
+# Version Control
 .git
 .gitignore
 .github
-.dockerignore
+.gitattributes
+
+# IDEs
 .idea
+.vscode
 *.iml
+*.swp
+*.swo
+*~
+
+# OS Files
 .DS_Store
-README.md
-docker-compose.yml
+Thumbs.db
 .env
 .env.local
-*.log
-tmp/
+.env.*.local
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Build artifacts
 dist/
+build/
+*.o
+*.a
+*.so
+
+# Dependencies
 node_modules/
 vendor/
+
+# Logs
+*.log
+logs/
+tmp/
+
+# Testing
+.coverage
+*.test
+
+# Docker
+docker-compose.yml
+.dockerignore
+Dockerfile*
+
+# Development
+minio-data/
+data/
+.tools/
